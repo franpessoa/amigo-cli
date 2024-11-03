@@ -55,7 +55,7 @@ pub struct Envio {
 /// relacionadas á estrutura `Jogo`
 pub mod jogo {
     use super::Jogo;
-    use rusqlite::Connection;
+    use rusqlite::{params, Connection};
 
     pub fn get_all_jogos(conn: &mut Connection) -> Vec<Jogo> {
         let mut query = conn.prepare("SELECT id, nome FROM jogos").unwrap();
@@ -73,15 +73,23 @@ pub mod jogo {
     }
 
     pub fn create_jogo_with_nome(conn: &mut Connection, nome: &String) -> usize {
-        let id = conn
-            .execute("INSERT INTO jogos (nome) VALUES (?1)", [nome.clone()])
+        let mut query = conn
+            .prepare("INSERT INTO jogos (nome) VALUES (?1) RETURNING id")
             .unwrap();
-        id
+
+        query
+            .query_row(params![nome], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
     }
 
     pub fn delete_jogo_by_id(conn: &mut Connection, id: u64) -> usize {
-        let id = conn.execute("DELETE FROM jogos WHERE id=?1", [id]).unwrap();
-        id
+        let mut query = conn
+            .prepare("DELETE FROM jogos WHERE id=?1 RETURNING id")
+            .unwrap();
+
+        query
+            .query_row(params![id], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
     }
 }
 
