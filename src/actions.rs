@@ -26,8 +26,16 @@ pub mod jogador {
     use crate::cli::JogadoresSetParams;
     use rusqlite::Connection;
 
-    pub fn jogadores_ls(conn: &mut Connection, jogo: u64) {
+    pub fn jogadores_ls_with_jogo(conn: &mut Connection, jogo: u64) {
         let jogadores = crate::db::jogador::get_jogadores_by_jogo(conn, jogo);
+
+        for j in jogadores {
+            println!("{:?}", j)
+        }
+    }
+
+    pub fn jogadores_ls_all(conn: &mut Connection) {
+        let jogadores = crate::db::jogador::get_all_jogadores(conn);
 
         for j in jogadores {
             println!("{:?}", j)
@@ -136,5 +144,51 @@ pub mod sorteio {
         let sorteio = crate::db::sorteio::get_sorteio_by_id(conn, &id);
 
         println!("{:#?}", sorteio)
+    }
+}
+
+pub mod envio {
+    use rusqlite::Connection;
+
+    use crate::{
+        config::Config,
+        envio::{make_transport, ProcessoEnvio},
+    };
+
+    pub fn envio_inspect(conn: &mut Connection, envio: u64) {
+        let envio = crate::db::envios::get_envio_by_id(conn, envio);
+
+        tracing::info!("{:?}", envio);
+    }
+
+    pub fn envio_redo(conn: &mut Connection, ctx: &Config, envio: u64) {
+        let envio = crate::db::envios::get_envio_by_id(conn, envio);
+        let destino = crate::db::jogador::get_jogador_by_id(conn, envio.destino);
+        let sorteado = crate::db::jogador::get_jogador_by_id(conn, envio.sorteado);
+        let transport = make_transport(ctx);
+
+        let processo = ProcessoEnvio {
+            destino,
+            sorteado,
+            sorteio: envio.sorteio,
+        };
+
+        processo.enviar(transport, conn, ctx).unwrap();
+    }
+
+    pub fn envio_ls_all(conn: &mut Connection) {
+        let envio = crate::db::envios::get_all_envios(conn);
+
+        for e in envio {
+            tracing::info!("{:?}", e)
+        }
+    }
+
+    pub fn envio_ls_with_sorteio(conn: &mut Connection, sorteio: u64) {
+        let envios = crate::db::envios::get_envios_by_sorteio(conn, sorteio);
+
+        for e in envios {
+            tracing::info!("{:?}", e)
+        }
     }
 }

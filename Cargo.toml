@@ -14,3 +14,4 @@ refinery = { version = "0.8.14", features = ["rusqlite", "rusqlite-bundled"] }
 rusqlite = "0.31.0"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+tracing-unwrap = "1.0.1"

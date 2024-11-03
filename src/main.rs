@@ -29,7 +29,10 @@ fn exec_args(args: Arguments, conn: &mut Connection, ctx: &Config) {
         },
 
         Commands::Jogadores { action } => match action {
-            JogadoresAction::Ls { jogo } => actions::jogador::jogadores_ls(conn, jogo),
+            JogadoresAction::Ls { jogo } => match jogo {
+                Some(j) => actions::jogador::jogadores_ls_with_jogo(conn, j),
+                None => actions::jogador::jogadores_ls_all(conn),
+            },
             JogadoresAction::Add { jogo, nome, email } => {
                 actions::jogador::jogadores_add(conn, jogo, nome, email)
             }
@@ -48,6 +51,15 @@ fn exec_args(args: Arguments, conn: &mut Connection, ctx: &Config) {
                 None => actions::sorteio::sorteio_ls(conn),
             },
             SorteioAction::Inspect { sorteio } => actions::sorteio::sorteio_inspect(conn, sorteio),
+        },
+
+        Commands::Envio { action } => match action {
+            cli::EnvioAction::Inspect { envio } => actions::envio::envio_inspect(conn, envio),
+            cli::EnvioAction::Redo { envio } => actions::envio::envio_redo(conn, ctx, envio),
+            cli::EnvioAction::Ls { sorteio } => match sorteio {
+                Some(s) => actions::envio::envio_ls_with_sorteio(conn, s),
+                None => actions::envio::envio_ls_all(conn),
+            },
         },
     }
 }

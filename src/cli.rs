@@ -14,6 +14,10 @@ pub enum Commands {
         #[command(subcommand)]
         action: SorteioAction,
     },
+    Envio {
+        #[command(subcommand)]
+        action: EnvioAction,
+    },
 }
 
 #[derive(Clone, Subcommand)]
@@ -26,7 +30,9 @@ pub enum JogoAction {
 #[derive(Clone, Subcommand)]
 pub enum JogadoresAction {
     Add {
+        #[arg(short, long)]
         jogo: u64,
+
         nome: String,
         email: String,
     },
@@ -37,7 +43,8 @@ pub enum JogadoresAction {
         jogador: u64,
     },
     Ls {
-        jogo: u64,
+        #[arg(short, long, default_value=None)]
+        jogo: Option<u64>,
     },
     Set {
         id: u64,
@@ -67,6 +74,20 @@ pub enum SorteioAction {
     },
     Inspect {
         sorteio: u64,
+    },
+}
+
+#[derive(Clone, Subcommand)]
+pub enum EnvioAction {
+    Ls {
+        #[arg(short, long, default_value=None)]
+        sorteio: Option<u64>,
+    },
+    Inspect {
+        envio: u64,
+    },
+    Redo {
+        envio: u64,
     },
 }
 

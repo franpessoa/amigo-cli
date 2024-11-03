@@ -103,6 +103,20 @@ pub mod jogador {
         jogadores
     }
 
+    pub fn get_all_jogadores(conn: &mut Connection) -> Vec<Jogador> {
+        let mut query = conn
+            .prepare("SELECT id, nome, email, jogo FROM jogadores")
+            .unwrap();
+
+        let jogadores = query
+            .query_map([], |row| Ok(extract_jogador(row)))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect::<Vec<Jogador>>();
+
+        jogadores
+    }
+
     pub fn create_jogador(conn: &mut Connection, jogo: u64, nome: String, email: String) -> usize {
         conn.execute(
             "INSERT INTO jogadores (jogo, nome, email) VALUES (?1, ?2, ?3)",
@@ -234,6 +248,26 @@ pub mod envios {
             .unwrap();
         query
             .query_map(params![sorteio], |x| extract_envio(x))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect()
+    }
+
+    pub fn get_envio_by_id(conn: &mut Connection, envio: u64) -> Envio {
+        let mut query = conn
+            .prepare("SELECT id, sorteio, destino, sorteado, sucesso, erro FROM envios WHERE id=?1")
+            .unwrap();
+
+        query.query_row(params![envio], extract_envio).unwrap()
+    }
+
+    pub fn get_all_envios(conn: &mut Connection) -> Vec<Envio> {
+        let mut query = conn
+            .prepare("SELECT id, sorteio, destino, sorteado, sucesso, erro FROM envios")
+            .unwrap();
+
+        query
+            .query_map(params![], extract_envio)
             .unwrap()
             .map(|x| x.unwrap())
             .collect()
