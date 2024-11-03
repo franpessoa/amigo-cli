@@ -126,11 +126,13 @@ pub mod jogador {
     }
 
     pub fn create_jogador(conn: &mut Connection, jogo: u64, nome: String, email: String) -> usize {
-        conn.execute(
-            "INSERT INTO jogadores (jogo, nome, email) VALUES (?1, ?2, ?3)",
-            [jogo.to_string(), nome, email],
-        )
-        .unwrap()
+        let mut query = conn
+            .prepare("INSERT INTO jogadores (jogo, nome, email) VALUES (?1, ?2, ?3) RETURNING id")
+            .unwrap();
+
+        query
+            .query_row(params![jogo, nome, email], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
     }
 
     pub fn get_jogador_by_id(conn: &mut Connection, id: u64) -> Jogador {
@@ -138,11 +140,9 @@ pub mod jogador {
             .prepare("SELECT id, nome, email, jogo FROM jogadores WHERE id=?1")
             .unwrap();
 
-        let mut rows = query.query([id.to_string()]).unwrap();
-        let jogador_row = rows.next().unwrap().unwrap();
-
-        let jogador = extract_jogador(jogador_row);
-        jogador
+        query
+            .query_row(params![id], |x| Ok(extract_jogador(x)))
+            .unwrap()
     }
 
     pub fn update_jogador_by_collumn(
@@ -150,19 +150,26 @@ pub mod jogador {
         collumn: &String,
         new_value: String,
         id: u64,
-    ) {
-        conn.execute(
-            &format!("UPDATE jogadores SET {collumn} = ?1 WHERE id=?2"),
-            params![new_value, id],
-        )
-        .unwrap();
+    ) -> usize {
+        let mut query = conn
+            .prepare(&format!(
+                "UPDATE jogadores SET {collumn} = ?1 WHERE id=?2 RETURNING id"
+            ))
+            .unwrap();
+
+        query
+            .query_row(params![new_value, id], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
     }
 
     pub fn delete_jogador_by_id(conn: &mut Connection, id: u64) -> usize {
-        let id = conn
-            .execute("DELETE FROM jogadores WHERE id=?1", params![id])
+        let mut query = conn
+            .prepare("DELETE FROM jogadores WHERE id=?1 RETURNING id")
             .unwrap();
-        id
+
+        query
+            .query_row(params![id], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
     }
 
     fn extract_jogador(row: &rusqlite::Row<'_>) -> Jogador {
@@ -224,13 +231,22 @@ pub mod sorteio {
         jogo: u64,
         hasher: T,
         jogadores: Vec<Jogador>,
-    ) {
-        conn
-            .execute(
-                "INSERT INTO sorteios (seed, jogo, jogadores_hash, jogadores_qtd) VALUES (?1, ?2, ?3, ?4)",
-                params![seed.to_string(), jogo, hasher.finish().to_string(), jogadores.len()],
-            )
+    ) -> usize {
+        let mut query = conn
+            .prepare("INSERT INTO sorteios (seed, jogo, jogadores_hash, jogadores_qtd) VALUES (?1, ?2, ?3, ?4) RETURNING id")
             .unwrap();
+
+        query
+            .query_row(
+                params![
+                    seed.to_string(),
+                    jogo,
+                    hasher.finish().to_string(),
+                    jogadores.len()
+                ],
+                |x| Ok(x.get(0).unwrap()),
+            )
+            .unwrap()
     }
 
     fn extract_sorteio(row: &rusqlite::Row<'_>) -> Sorteio {

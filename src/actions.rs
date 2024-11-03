@@ -92,7 +92,7 @@ pub mod sorteio {
 
         let id = crate::db::sorteio::create_sorteio(conn, &seed, jogo, hasher, jogadores);
 
-        println!("Criado sorteio com id {jogo} e semente {seed}");
+        println!("Criado sorteio com id {id} e semente {seed}");
         println!("Use o comando `sorteio run` para rodá-lo");
     }
 
