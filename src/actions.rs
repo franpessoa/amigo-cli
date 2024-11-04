@@ -10,12 +10,14 @@ pub mod jogo {
     }
 
     pub fn jogo_new(conn: &mut Connection, nome: String) {
+        tracing::info!("Criando jogo");
         let id = crate::db::jogo::create_jogo_with_nome(conn, &nome);
 
         tracing::info!("Criado jogo `{}` com id {}", nome, id);
     }
 
     pub fn jogo_rm(conn: &mut Connection, id: u64) {
+        tracing::info!("Deletando jogo");
         let id = crate::db::jogo::delete_jogo_by_id(conn, id);
 
         tracing::info!("Deletado jogo de id {}", id)
@@ -82,8 +84,9 @@ pub mod sorteio {
 
     pub fn sorteio_new(conn: &mut Connection, jogo: u64) {
         let seed = create_seed();
-        let jogadores = crate::db::jogador::get_jogadores_by_jogo(conn, jogo);
+        tracing::info!("Sorteada semente {}", seed);
 
+        let jogadores = crate::db::jogador::get_jogadores_by_jogo(conn, jogo);
         let mut jogadores_ids = jogadores.iter().map(|x| x.id).collect::<Vec<u64>>();
         jogadores_ids.sort();
 
@@ -92,7 +95,7 @@ pub mod sorteio {
 
         let id = crate::db::sorteio::create_sorteio(conn, &seed, jogo, hasher, jogadores);
 
-        tracing::info!("Criado sorteio com id {id} e semente {seed}");
+        tracing::info!("Criado sorteio com id {id}");
         tracing::info!("Use o comando `sorteio run` para rodá-lo");
     }
 
@@ -108,7 +111,11 @@ pub mod sorteio {
         let sorteio = crate::db::sorteio::get_sorteio_by_id(conn, &id);
         let jogadores = crate::db::jogador::get_jogadores_by_jogo(conn, sorteio.jogo);
 
-        let results = crate::envio::run_and_email(sorteio, jogadores, smtp_ctx, conn);
+        let ids = crate::db::envios::delete_envios_by_sorteio(conn, sorteio.id);
+
+        tracing::warn!("Deletados envios com ids {:?}", ids);
+
+        let _ = crate::envio::run_and_email(sorteio, jogadores, smtp_ctx, conn);
 
         for r in crate::db::envios::get_envios_by_sorteio(conn, id) {
             if r.sucesso {
@@ -121,8 +128,6 @@ pub mod sorteio {
                 )
             }
         }
-
-        tracing::info!("Resultados completos: {:#?}", results);
     }
 
     pub fn sorteios_ls_by_jogo(conn: &mut Connection, jogo: u64) {

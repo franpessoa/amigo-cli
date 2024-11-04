@@ -297,6 +297,18 @@ pub mod envios {
             .collect()
     }
 
+    pub fn delete_envios_by_sorteio(conn: &mut Connection, sorteio: u64) -> Vec<usize> {
+        let mut query = conn
+            .prepare("DELETE FROM envios WHERE sorteio = ?1 RETURNING id")
+            .unwrap();
+
+        query
+            .query_map(params![sorteio], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect()
+    }
+
     fn extract_envio(x: &rusqlite::Row<'_>) -> Result<Envio, rusqlite::Error> {
         Ok(Envio {
             id: x.get(0).unwrap(),

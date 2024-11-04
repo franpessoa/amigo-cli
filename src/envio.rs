@@ -86,9 +86,8 @@ fn register_success(processo: &ProcessoEnvio, conn: &mut Connection) {
     .unwrap();
 }
 
-#[tracing::instrument]
+#[tracing::instrument(level = "debug")]
 fn register_error(processo: &ProcessoEnvio, conn: &mut Connection, error: String) {
-    tracing::info!("");
     conn.execute(
         "INSERT INTO envios (sorteio, destino, sorteado, sucesso, erro) VALUES (?1, ?2, ?3, ?4, ?5)",
         params![
@@ -100,6 +99,8 @@ fn register_error(processo: &ProcessoEnvio, conn: &mut Connection, error: String
         ],
     )
     .unwrap();
+
+    tracing::debug!("Erro registrado");
 }
 
 /// Realmente roda o sorteio, enviando os emails.
