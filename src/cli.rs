@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum Commands {
     Jogo {
         #[command(subcommand)]
@@ -20,14 +20,14 @@ pub enum Commands {
     },
 }
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum JogoAction {
     New { name: String },
     Rm { id: u64 },
     Ls,
 }
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum JogadoresAction {
     Add {
         #[arg(short, long)]
@@ -54,13 +54,13 @@ pub enum JogadoresAction {
     },
 }
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum JogadoresSetParams {
     Nome { val: String },
     Email { val: String },
 }
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum SorteioAction {
     New {
         jogo: u64,
@@ -77,7 +77,7 @@ pub enum SorteioAction {
     },
 }
 
-#[derive(Clone, Subcommand)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum EnvioAction {
     Ls {
         #[arg(short, long, default_value=None)]
@@ -91,8 +91,11 @@ pub enum EnvioAction {
     },
 }
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 pub struct Arguments {
     #[command(subcommand)]
     pub cmd: Commands,
+
+    #[arg(short, long, default_value = "false")]
+    pub debug: bool,
 }

@@ -9,11 +9,37 @@ use clap::Parser;
 use cli::{JogadoresAction, JogoAction, SorteioAction};
 use config::Config;
 use rusqlite::Connection;
+use tracing_subscriber::EnvFilter;
 
 fn main() {
-    tracing_subscriber::fmt::init();
-    let args = Arguments::parse();
     let config = crate::config::Config::from_env();
+    let args = Arguments::parse();
+
+    let directive = if args.debug {
+        "refinery_core=debug"
+    } else {
+        "refinery_core=off"
+    };
+
+    let level = if args.debug {
+        tracing::Level::DEBUG
+    } else {
+        tracing::Level::INFO
+    };
+
+    let crate_filter = EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env()
+        .unwrap()
+        .add_directive(directive.parse().unwrap());
+
+    tracing_subscriber::fmt()
+        .event_format(tracing_subscriber::fmt::format().compact())
+        .with_env_filter(crate_filter)
+        .init();
+
+    tracing::debug!("{:?}", args);
+    tracing::debug!("{}", directive);
 
     let mut conn = db::make_conn(&config);
 

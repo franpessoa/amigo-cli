@@ -5,20 +5,20 @@ pub mod jogo {
         let jogos = crate::db::jogo::get_all_jogos(conn);
 
         for j in jogos {
-            println!("{:?}", j)
+            tracing::info!("{:?}", j)
         }
     }
 
     pub fn jogo_new(conn: &mut Connection, nome: String) {
         let id = crate::db::jogo::create_jogo_with_nome(conn, &nome);
 
-        println!("Criado jogo `{}` com id {}", nome, id);
+        tracing::info!("Criado jogo `{}` com id {}", nome, id);
     }
 
     pub fn jogo_rm(conn: &mut Connection, id: u64) {
         let id = crate::db::jogo::delete_jogo_by_id(conn, id);
 
-        println!("Deletado jogo de id {}", id)
+        tracing::info!("Deletado jogo de id {}", id)
     }
 }
 
@@ -30,7 +30,7 @@ pub mod jogador {
         let jogadores = crate::db::jogador::get_jogadores_by_jogo(conn, jogo);
 
         for j in jogadores {
-            println!("{:?}", j)
+            tracing::info!("{:?}", j)
         }
     }
 
@@ -38,19 +38,19 @@ pub mod jogador {
         let jogadores = crate::db::jogador::get_all_jogadores(conn);
 
         for j in jogadores {
-            println!("{:?}", j)
+            tracing::info!("{:?}", j)
         }
     }
 
     pub fn jogadores_add(conn: &mut Connection, jogo: u64, nome: String, email: String) {
         let id = crate::db::jogador::create_jogador(conn, jogo, nome, email);
-        println!("Criado jogador com id {id}")
+        tracing::info!("Criado jogador com id {id}")
     }
 
     pub fn jogadores_inspect(conn: &mut Connection, id: u64) {
         let jogador = crate::db::jogador::get_jogador_by_id(conn, id);
 
-        println!("{:#?}", jogador);
+        tracing::info!("{:#?}", jogador);
     }
 
     pub fn jogadores_set(conn: &mut Connection, id: u64, param: JogadoresSetParams) {
@@ -61,13 +61,13 @@ pub mod jogador {
 
         crate::db::jogador::update_jogador_by_collumn(conn, &collumn, new_value, id);
 
-        println!("Atualizada propriedade {collumn} do id {id}");
+        tracing::info!("Atualizada propriedade {collumn} do id {id}");
     }
 
     pub fn jogadores_rm(conn: &mut Connection, id: u64) {
         let id = crate::db::jogador::delete_jogador_by_id(conn, id);
 
-        println!("Removido jogador de id {id}")
+        tracing::info!("Removido jogador de id {id}")
     }
 }
 
@@ -92,8 +92,8 @@ pub mod sorteio {
 
         let id = crate::db::sorteio::create_sorteio(conn, &seed, jogo, hasher, jogadores);
 
-        println!("Criado sorteio com id {id} e semente {seed}");
-        println!("Use o comando `sorteio run` para rodá-lo");
+        tracing::info!("Criado sorteio com id {id} e semente {seed}");
+        tracing::info!("Use o comando `sorteio run` para rodá-lo");
     }
 
     fn create_seed() -> String {
@@ -112,23 +112,24 @@ pub mod sorteio {
 
         for r in crate::db::envios::get_envios_by_sorteio(conn, id) {
             if r.sucesso {
-                println!("Envio para id {} exitoso", r.destino)
+                tracing::info!("Envio para id {} exitoso", r.destino)
             } else {
-                println!(
+                tracing::info!(
                     "Envio para id {} não-exitoso com mensagem de erro {:?}",
-                    r.destino, r.erro
+                    r.destino,
+                    r.erro
                 )
             }
         }
 
-        println!("Resultados completos: {:#?}", results);
+        tracing::info!("Resultados completos: {:#?}", results);
     }
 
     pub fn sorteios_ls_by_jogo(conn: &mut Connection, jogo: u64) {
         let sorteios = crate::db::sorteio::get_sorteios_by_jogo(conn, jogo);
 
         for s in sorteios {
-            println!("{:?}", s)
+            tracing::info!("{:?}", s)
         }
     }
 
@@ -136,14 +137,14 @@ pub mod sorteio {
         let sorteios = crate::db::sorteio::get_sorteios(conn);
 
         for s in sorteios {
-            println!("{:?}", s)
+            tracing::info!("{:?}", s)
         }
     }
 
     pub fn sorteio_inspect(conn: &mut Connection, id: u64) {
         let sorteio = crate::db::sorteio::get_sorteio_by_id(conn, &id);
 
-        println!("{:#?}", sorteio)
+        tracing::info!("{:#?}", sorteio)
     }
 }
 
