@@ -60,12 +60,7 @@ pub mod jogo {
     pub fn get_all_jogos(conn: &mut Connection) -> Vec<Jogo> {
         let mut query = conn.prepare("SELECT id, nome FROM jogos").unwrap();
         let jogos = query
-            .query_map((), |row| {
-                Ok(Jogo {
-                    id: row.get(0).unwrap(),
-                    nome: row.get(1).unwrap(),
-                })
-            })
+            .query_map((), |row| Ok(extract_jogo(row)))
             .unwrap()
             .map(|x| x.unwrap())
             .collect::<Vec<Jogo>>();
@@ -90,6 +85,23 @@ pub mod jogo {
         query
             .query_row(params![id], |x| Ok(x.get(0).unwrap()))
             .unwrap()
+    }
+
+    pub fn get_jogo_by_id(conn: &mut Connection, id: u64) -> Jogo {
+        let mut query = conn
+            .prepare("SELECT id, nome FROM jogos WHERE id=?1")
+            .unwrap();
+
+        query
+            .query_row(params![id], |x| Ok(extract_jogo(x)))
+            .unwrap()
+    }
+
+    fn extract_jogo(row: &rusqlite::Row<'_>) -> Jogo {
+        Jogo {
+            id: row.get(0).unwrap(),
+            nome: row.get(1).unwrap(),
+        }
     }
 }
 

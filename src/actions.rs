@@ -35,6 +35,16 @@ pub mod jogo {
             JogoFromFormat::Csv => CsvImporter::from_path(path, conn, &nome),
         };
     }
+
+    #[tracing::instrument(skip_all)]
+    pub fn jogo_inspect(conn: &mut Connection, id: u64) {
+        let jogo = crate::db::jogo::get_jogo_by_id(conn, id);
+
+        tracing::info!("{:#?}", jogo);
+
+        super::jogador::jogadores_ls_with_jogo(conn, jogo.id);
+        super::sorteio::sorteios_ls_by_jogo(conn, jogo.id);
+    }
 }
 
 pub mod jogador {

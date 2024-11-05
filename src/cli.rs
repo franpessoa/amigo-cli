@@ -41,6 +41,9 @@ pub enum JogoAction {
         #[arg(short, long)]
         nome: String,
     },
+    Inspect {
+        id: u64,
+    },
 }
 
 #[derive(Clone, Subcommand, Debug)]

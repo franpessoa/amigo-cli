@@ -56,6 +56,7 @@ fn exec_args(args: Arguments, conn: &mut Connection, ctx: &Config) {
             JogoAction::From { format, path, nome } => {
                 actions::jogo::jogo_from(conn, format, path, nome)
             }
+            JogoAction::Inspect { id } => actions::jogo::jogo_inspect(conn, id),
         },
 
         Commands::Jogadores { action } => match action {
