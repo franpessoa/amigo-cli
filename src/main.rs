@@ -3,6 +3,7 @@ pub mod cli;
 pub mod config;
 pub mod db;
 pub mod envio;
+pub mod import;
 
 use crate::cli::{Arguments, Commands};
 use clap::Parser;
@@ -52,6 +53,9 @@ fn exec_args(args: Arguments, conn: &mut Connection, ctx: &Config) {
             JogoAction::Ls => actions::jogo::jogo_ls(conn),
             JogoAction::New { name: nome } => actions::jogo::jogo_new(conn, nome),
             JogoAction::Rm { id } => actions::jogo::jogo_rm(conn, id),
+            JogoAction::From { format, path, nome } => {
+                actions::jogo::jogo_from(conn, format, path, nome)
+            }
         },
 
         Commands::Jogadores { action } => match action {

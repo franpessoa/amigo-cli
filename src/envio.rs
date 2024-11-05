@@ -41,7 +41,7 @@ impl ProcessoEnvio {
         sender: T,
         conn: &mut Connection,
         ctx: &crate::config::Config,
-    ) -> Result<T::Ok, T::Error>
+    ) -> usize
     where
         T::Error: ToString,
     {
@@ -61,46 +61,48 @@ impl ProcessoEnvio {
         let result = sender.send(&message);
 
         match result {
-            Ok(x) => {
-                register_success(&self, conn);
-                return Ok(x);
-            }
-            Err(x) => {
-                register_error(&self, conn, x.to_string());
-                return Err(x);
-            }
+            Ok(_) => register_success(&self, conn),
+            Err(x) => register_error(&self, conn, x.to_string()),
         }
     }
 }
 
-fn register_success(processo: &ProcessoEnvio, conn: &mut Connection) {
-    conn.execute(
-        "INSERT INTO envios (sorteio, destino, sorteado, sucesso) VALUES (?1, ?2, ?3, ?4)",
-        params![
-            processo.sorteio,
-            processo.destino.id,
-            processo.sorteado.id,
-            true
-        ],
-    )
-    .unwrap();
+fn register_success(processo: &ProcessoEnvio, conn: &mut Connection) -> usize {
+    let mut query = conn
+        .prepare("INSERT INTO envios (sorteio, destino, sorteado, sucesso) VALUES (?1, ?2, ?3, ?4) RETURNING id")
+        .unwrap();
+
+    query
+        .query_row(
+            params![
+                processo.sorteio,
+                processo.destino.id,
+                processo.sorteado.id,
+                true
+            ],
+            |x| Ok(x.get(0).unwrap()),
+        )
+        .unwrap()
 }
 
 #[tracing::instrument(level = "debug")]
-fn register_error(processo: &ProcessoEnvio, conn: &mut Connection, error: String) {
-    conn.execute(
-        "INSERT INTO envios (sorteio, destino, sorteado, sucesso, erro) VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![
-            processo.sorteio,
-            processo.destino.id,
-            processo.sorteado.id,
-            false,
-            error
-        ],
-    )
-    .unwrap();
+fn register_error(processo: &ProcessoEnvio, conn: &mut Connection, error: String) -> usize {
+    let mut query = conn
+        .prepare("INSERT INTO envios (sorteio, destino, sorteado, sucesso, erro) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id")
+        .unwrap();
 
-    tracing::debug!("Erro registrado");
+    query
+        .query_row(
+            params![
+                processo.sorteio,
+                processo.destino.id,
+                processo.sorteado.id,
+                false,
+                error
+            ],
+            |x| Ok(x.get(0).unwrap()),
+        )
+        .unwrap()
 }
 
 /// Realmente roda o sorteio, enviando os emails.
@@ -111,7 +113,7 @@ pub fn run_and_email(
     mut jogadores: Vec<Jogador>,
     smtp_ctx: &Config,
     conn: &mut Connection,
-) -> Vec<Result<lettre::transport::smtp::response::Response, lettre::transport::smtp::Error>> {
+) -> Vec<usize> {
     // shuffle jogadores according to seed
     let mut rand: ChaCha20Rng = rand_seeder::Seeder::from(sorteio.seed.clone()).make_rng();
     jogadores.shuffle(&mut rand);
@@ -130,7 +132,7 @@ fn iter_and_send(
     transport: lettre::SmtpTransport,
     conn: &mut Connection,
     smtp_ctx: &Config,
-) -> Vec<Result<lettre::transport::smtp::response::Response, lettre::transport::smtp::Error>> {
+) -> Vec<usize> {
     let mut results = vec![];
 
     for (idx, j) in jogadores.iter().enumerate() {

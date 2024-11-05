@@ -309,6 +309,16 @@ pub mod envios {
             .collect()
     }
 
+    pub fn delete_envios_by_id(conn: &mut Connection, envio: u64) -> usize {
+        let mut query = conn
+            .prepare("DELETE FROM envios WHERE id = ?1 RETURNING id")
+            .unwrap();
+
+        query
+            .query_row(params![envio], |x| Ok(x.get(0).unwrap()))
+            .unwrap()
+    }
+
     fn extract_envio(x: &rusqlite::Row<'_>) -> Result<Envio, rusqlite::Error> {
         Ok(Envio {
             id: x.get(0).unwrap(),

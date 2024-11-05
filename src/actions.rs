@@ -1,5 +1,12 @@
 pub mod jogo {
+    use std::path::PathBuf;
+
     use rusqlite::Connection;
+
+    use crate::{
+        cli::JogoFromFormat,
+        import::{csv::CsvImporter, Importer},
+    };
 
     pub fn jogo_ls(conn: &mut Connection) {
         let jogos = crate::db::jogo::get_all_jogos(conn);
@@ -21,6 +28,12 @@ pub mod jogo {
         let id = crate::db::jogo::delete_jogo_by_id(conn, id);
 
         tracing::info!("Deletado jogo de id {}", id)
+    }
+
+    pub fn jogo_from(conn: &mut Connection, format: JogoFromFormat, path: PathBuf, nome: String) {
+        match format {
+            JogoFromFormat::Csv => CsvImporter::from_path(path, conn, &nome),
+        };
     }
 }
 
@@ -179,7 +192,15 @@ pub mod envio {
             sorteio: envio.sorteio,
         };
 
-        processo.enviar(transport, conn, ctx).unwrap();
+        let id = processo.enviar(transport, conn, ctx);
+        let new_envio = crate::db::envios::get_envio_by_id(conn, id.try_into().unwrap());
+
+        tracing::info!("Criado um novo envio com id {}", id);
+        if new_envio.sucesso {
+            tracing::info!("Envio exitoso: {:#?}", new_envio)
+        } else {
+            tracing::error!("Erro! {:#?}", new_envio)
+        }
     }
 
     pub fn envio_ls_all(conn: &mut Connection) {

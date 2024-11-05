@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Clone, Subcommand, Debug)]
@@ -22,9 +24,23 @@ pub enum Commands {
 
 #[derive(Clone, Subcommand, Debug)]
 pub enum JogoAction {
-    New { name: String },
-    Rm { id: u64 },
+    New {
+        name: String,
+    },
+    Rm {
+        id: u64,
+    },
     Ls,
+    From {
+        #[arg(short, long, default_value = "csv")]
+        format: JogoFromFormat,
+
+        #[arg(short, long)]
+        path: PathBuf,
+
+        #[arg(short, long)]
+        nome: String,
+    },
 }
 
 #[derive(Clone, Subcommand, Debug)]
@@ -58,6 +74,11 @@ pub enum JogadoresAction {
 pub enum JogadoresSetParams {
     Nome { val: String },
     Email { val: String },
+}
+
+#[derive(Debug, Clone, clap::ValueEnum)]
+pub enum JogoFromFormat {
+    Csv,
 }
 
 #[derive(Clone, Subcommand, Debug)]
