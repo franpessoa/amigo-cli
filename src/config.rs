@@ -26,7 +26,10 @@ impl Config {
             smtp_username: std::env::var("SMTP_USER").unwrap(),
             smtp_password: std::env::var("SMTP_PASSWORD").unwrap(),
             format_message: |e| {
-                return format!("Seu amigo secreto foi sorteado! É {}", e.sorteado.nome);
+                return format!(
+                    "{}, seu amigo secreto foi sorteado! É {}",
+                    e.destino.nome, e.sorteado.nome
+                );
             },
             subject: "Amigo Secreto".to_owned(),
             db_path: std::env::var("DB_PATH").unwrap_or("sqlite.db".to_string()),
